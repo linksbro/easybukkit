@@ -31,7 +31,7 @@ public class Commands {
 
                 EntityType spawn = EntityType.valueOf(args[1].toUpperCase());
                 if (spawn == null) {
-                    sender.sendMessage("Could not find entity "+args[1]);
+                    sender.sendMessage("Could not find entity "+args[1].toUpperCase());
                     sender.sendMessage("Please use names found in EntityType");
                     return false;
                 }
