@@ -26,6 +26,7 @@ public final class EasyBukkit extends JavaPlugin {
     public void onEnable(){
         scheduler = Bukkit.getServer().getScheduler();
         singleton = this;
+        getCommand("spawn").setExecutor(new Commands(this));
     }
 
     /**

@@ -2,6 +2,7 @@ package com.tennysonholloway;
 
 import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
+import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -14,7 +15,14 @@ import org.bukkit.entity.Player;
  * . / _ \/ _ `/ __/ _ \/ _ \/ /|_/ / /__
  * ./_.__/\_,_/\__/\___/_//_/_/  /_/\___/
  */
-public class Commands {
+public class Commands implements CommandExecutor {
+
+    private static EasyBukkit plugin;
+    public Commands(EasyBukkit plugin) {
+        this.plugin = plugin;
+    }
+
+    @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args){
 
         if (cmd.getName().equalsIgnoreCase("spawn")) {
