@@ -84,6 +84,4 @@ public final class EasyBukkit extends JavaPlugin {
         meta.setDisplayName(name);
         iS.setItemMeta(meta);
     }
-
-
 }

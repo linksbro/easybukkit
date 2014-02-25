@@ -1,3 +1,7 @@
 name: easybukkit
 main: com.tennysonholloway.EasyBukkit
 version: 1
+commands:
+   spawn:
+      description: Spawns mobs at a player's location
+      usage: /<command> <number> <entities> <player>
