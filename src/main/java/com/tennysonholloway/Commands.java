@@ -54,7 +54,7 @@ public class Commands implements CommandExecutor {
 
                 for (int i = 0; i < count; i++)
                     target.getWorld().spawnEntity(target.getLocation(), spawn);
-
+                return true;
             } else {
                 sender.sendMessage("This command can only be run from the console.");
             }
