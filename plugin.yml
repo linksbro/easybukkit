@@ -20,3 +20,6 @@ commands:
    move:
       description: Turns on|off moving
       usage: /move [on|off]
+   pc:
+      description: Set the play count
+      usage: /pc [number]
