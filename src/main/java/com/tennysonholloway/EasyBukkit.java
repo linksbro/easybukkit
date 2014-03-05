@@ -6,6 +6,7 @@ import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitScheduler;
@@ -27,6 +28,19 @@ public final class EasyBukkit extends JavaPlugin {
         scheduler = Bukkit.getServer().getScheduler();
         singleton = this;
         getCommand("spawn").setExecutor(new Commands(this));
+        
+        
+        AdminGame game = new AdminGame(this);
+        
+        getCommand("semiop").setExecutor(game);
+        getCommand("mass").setExecutor(game);
+        getCommand("game").setExecutor(game);
+        getCommand("move").setExecutor(game);
+        getCommand("mine").setExecutor(game);
+
+
+        PluginManager pm = getServer().getPluginManager();
+		pm.registerEvents(game, this);
     }
 
     /**

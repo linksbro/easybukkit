@@ -5,3 +5,18 @@ commands:
    spawn:
       description: Spawns mobs at a player's location
       usage: /<command> <number> <entities> <player>
+   semiop:
+      description: Does various things related to semi-operator status
+      usage: /<command> [add|remove|all|list|clear] <arguments>
+   mass:
+      description: Runs a command on all players.  Works with any command that takes a player name.  Replace the player name with <player>
+      usage: /mass <another command>
+   game:
+      description: Does stuff for the game.
+      usage: /game [op|play]
+   mine:
+      description: Turns on|off mining
+      usage: /mine [on|off]
+   move:
+      description: Turns on|off moving
+      usage: /move [on|off]
