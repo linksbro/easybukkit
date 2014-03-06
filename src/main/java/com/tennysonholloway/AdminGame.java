@@ -1,7 +1,9 @@
 package com.tennysonholloway;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -16,10 +18,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
-import org.bukkit.event.player.PlayerCommandPreprocessEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerLoginEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.player.*;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -32,20 +33,24 @@ public class AdminGame implements CommandExecutor, Listener {
 	
 	boolean miningOn = true;
 	boolean moveOn = true;
-
+    boolean opMode = true;
     boolean ready = false;
 
     BukkitTask readyTask;
 
 
-    Location spawnLoc;
+    Location spawnLoc, containerLoc, tree1, tree2;
 
     static int playerCount = -1;
 
-	List<String> semi_op_player_names;
+	List<String> semi_op_player_names, hasNotTypedCommand;
 	
 	List<String> permitted_commands;
-	
+
+    int initialTreeCount = -1, treeCount = 0;
+
+    HashMap<String, Integer> pointsMap = new HashMap<String, Integer>();
+
 	public AdminGame(Plugin plugin){
 		this.plugin = plugin;
 		this.logger = plugin.getLogger();
@@ -53,6 +58,7 @@ public class AdminGame implements CommandExecutor, Listener {
 		semi_op_player_names = new ArrayList<String>();
 		
 		permitted_commands = new ArrayList<String>();
+        hasNotTypedCommand = new ArrayList<String>();
 		permitted_commands.add("give");
 		permitted_commands.add("effect");
 
@@ -75,26 +81,33 @@ public class AdminGame implements CommandExecutor, Listener {
         }, 0, 60); //20 ticks = 1 second
 
         spawnLoc = new Location(Bukkit.getWorld("world"), -312d, 34d, -312d);
+        containerLoc = new Location(Bukkit.getWorld("world"), -305d, 20d, -305d);
+        tree1 = new Location(Bukkit.getWorld("world"), -275d, 55d, -275d);
+        tree2 = new Location(Bukkit.getWorld("world"), -353d, 33d, -353d);
 	}
 	
 
 	
 	
 	private boolean playMode(ArrayList<String> arguments) {
-		run("mass effect <player> 15 0"); //Mass clear effect
+		//run("mass effect <player> 15 0"); //Mass clear effect
 		run("semiop clear"); //No one is a semioperator
 		run("move on");
 		run("mine on");
         ready = true;
+        opMode = false;
+        spawnAllPlayers();
         return true;
 	}
 
 	private boolean opMode(ArrayList<String> arguments) {
-		run("mass effect <player> 15 1000 1000"); //Mass blindness
+		//run("mass effect <player> 15 1000 1000"); //Mass blindness
 		run("semiop all");  //Everyone is a semioperator
 		run("move off");
 		run("mine off");
 		ready = true;
+        opMode = true;
+        containAllPlayers();
 		return true;
 	}
 	
@@ -118,8 +131,16 @@ public class AdminGame implements CommandExecutor, Listener {
 			logger.info("You can do it!");
 
 
-            plugin.getServer().dispatchCommand(Bukkit.getConsoleSender(),
+            boolean success = plugin.getServer().dispatchCommand(Bukkit.getConsoleSender(),
                     event.getMessage().substring(1));
+            if (success) {
+                hasNotTypedCommand.remove(sender.getName());
+                String c = "Haven't typed valid commands: ";
+                for (String s : hasNotTypedCommand) {
+                    c += s+ " ";
+                }
+                logger.info(c);
+            }
 
 
             event.setCancelled(true);
@@ -177,7 +198,14 @@ public class AdminGame implements CommandExecutor, Listener {
             }
             return true;
         }
-		
+        if (cmd.getName().equalsIgnoreCase("tree")) {
+            initialTreeCount = treeCount(tree2, tree1);
+            sender.sendMessage("Counted "+initialTreeCount+" wood blocks");
+            return true;
+        }
+        if (cmd.getName().equalsIgnoreCase("treeclear")) {
+            clearTreeArea(tree2, tree1);
+        }
 		return false;
 	}
 	
@@ -272,11 +300,12 @@ public class AdminGame implements CommandExecutor, Listener {
 		semi_op_player_names.clear();
 		
 		for(Player player: plugin.getServer().getOnlinePlayers()) {
-			String name = player.getDisplayName();
+			String name = player.getName();
 			
 			logger.info("Adding: " + name);
 			
 			semi_op_player_names.add(name);
+            hasNotTypedCommand.add(name);
 			
 			
 		}
@@ -338,22 +367,60 @@ public class AdminGame implements CommandExecutor, Listener {
 	
 	@EventHandler
 	public void onBlockBreak(BlockBreakEvent event) {
-	    event.setCancelled(!miningOn);
-
+        if (!miningOn) {
+	        event.setCancelled(true);
+            return;
+        }
+        if (event.getBlock().getType() == Material.LOG) {
+            treeCount++;
+            if (treeCount % 5 == 0) {
+                Bukkit.broadcastMessage(treeCount + " of " +initialTreeCount + " destroyed! Keep going!");
+            }
+        }
 	}
+
+    @EventHandler
+    public void onBlockPlace(BlockPlaceEvent event) {
+        if (event.getBlock().getType() == Material.LOG)
+            treeCount--;
+    }
 
 
     @EventHandler
     public void onPlayerLogin(PlayerJoinEvent event) {
-        event.getPlayer().teleport(spawnLoc);
+        if (opMode)
+            event.getPlayer().teleport(containerLoc);
+        else
+            event.getPlayer().teleport(spawnLoc);
+    }
+
+    @EventHandler
+    public void onPlayerRespawn(PlayerRespawnEvent event) {
+        if (opMode)
+            event.getPlayer().teleport(containerLoc);
+        else
+            event.getPlayer().teleport(spawnLoc);
+    }
+
+    public void containAllPlayers() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            if (!p.isOp())
+                p.teleport(containerLoc);
+        }
+    }
+
+    public void spawnAllPlayers() {
+        for (Player p : Bukkit.getOnlinePlayers()) {
+            p.teleport(spawnLoc);
+        }
     }
 
 
 	@EventHandler
 	public void onPlayerMove(PlayerMoveEvent event) {
-        final Player p = event.getPlayer();
+        /*final Player p = event.getPlayer();
         final Location l = p.getLocation();
-        if (!moveOn || !ready) {
+        if (!moveOn || !ready && !p.isOp()) {
             plugin.getServer().getScheduler().runTaskLater(plugin, new BukkitRunnable() {
                 @Override
                 public void run() {
@@ -362,20 +429,38 @@ public class AdminGame implements CommandExecutor, Listener {
             }, 2); //20 ticks = 1 second
 
 
-        }
+        }*/
 	}
 
+    @EventHandler
+    public void onPlayerDamage(EntityDamageEvent e) {
+        if (e.getEntity() instanceof Player) {
+            Player p = (Player) e.getEntity();
+            if (e.getCause() == EntityDamageEvent.DamageCause.FALL) {
+                e.setDamage(0);
+            }
+        }
+    }
     public int treeCount(Location l1, Location l2) {
         int count = 0;
         for (int x = l1.getBlockX(); x < l2.getBlockX(); x++)
             for (int y = l1.getBlockY(); y < l2.getBlockY(); y++)
                 for (int z = l1.getBlockZ(); z < l2.getBlockZ(); z++) {
                     Block b = new Location(l1.getWorld(), (double)x, (double)y, (double)z).getBlock();
-                    if (b.getType() == Material.WOOD)
+                    if (b.getType() == Material.LOG)
                         count++;
                 }
         return count;
 
+    }
+
+    public void clearTreeArea(Location l1, Location l2) {
+        for (int x = l1.getBlockX(); x < l2.getBlockX(); x++)
+            for (int y = l1.getBlockY(); y < l2.getBlockY(); y++)
+                for (int z = l1.getBlockZ(); z < l2.getBlockZ(); z++) {
+                    Block b = new Location(l1.getWorld(), (double)x, (double)y, (double)z).getBlock();
+                    b.setType(Material.AIR);
+                }
     }
 
 }

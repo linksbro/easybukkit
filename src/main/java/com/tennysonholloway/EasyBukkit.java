@@ -38,7 +38,8 @@ public final class EasyBukkit extends JavaPlugin {
         getCommand("move").setExecutor(game);
         getCommand("mine").setExecutor(game);
         getCommand("pc").setExecutor(game);
-
+        getCommand("tree").setExecutor(game);
+        getCommand("treeclear").setExecutor(game);
         PluginManager pm = getServer().getPluginManager();
 		pm.registerEvents(game, this);
     }

@@ -23,3 +23,9 @@ commands:
    pc:
       description: Set the play count
       usage: /pc [number]
+   tree:
+      description: Run the tree counter
+      usage: /tree
+   treeclear:
+     description: clear the tree area
+     usage: /treeclear
