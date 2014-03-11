@@ -3,7 +3,6 @@ package com.tennysonholloway;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.bukkit.Bukkit;
@@ -18,13 +17,18 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockIgniteEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
-import org.bukkit.util.Vector;
 
 public class AdminGame implements CommandExecutor, Listener {
 
@@ -97,6 +101,7 @@ public class AdminGame implements CommandExecutor, Listener {
         ready = true;
         opMode = false;
         spawnAllPlayers();
+        readyTask.cancel();
         return true;
 	}
 
@@ -108,6 +113,7 @@ public class AdminGame implements CommandExecutor, Listener {
 		ready = true;
         opMode = true;
         containAllPlayers();
+        readyTask.cancel();
 		return true;
 	}
 	
@@ -383,8 +389,31 @@ public class AdminGame implements CommandExecutor, Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         if (event.getBlock().getType() == Material.LOG)
             treeCount--;
+        
+        if(opMode)
+        	event.setCancelled(true);
     }
 
+    @EventHandler
+    public void onBucketEmpty(PlayerBucketEmptyEvent  event) {
+      
+        if(opMode)
+        	event.setCancelled(true);
+    }
+    
+    @EventHandler
+    public void onBlockIgnite(BlockIgniteEvent event) {
+      
+        if(opMode)
+        	event.setCancelled(true);
+    }
+    
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+      
+        if(opMode)
+        	event.setCancelled(true);
+    }
 
     @EventHandler
     public void onPlayerLogin(PlayerJoinEvent event) {
